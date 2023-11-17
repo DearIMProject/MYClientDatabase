@@ -1,0 +1,6 @@
+use_frameworks!
+target 'MYClientDatabase_Tests' do
+  pod 'MYClientDatabase', :path => '../'
+  
+  
+end
