@@ -1,0 +1,20 @@
+//
+//  MYDataChatPerson.h
+//  AFNetworking
+//
+//  Created by APPLE on 2023/11/17.
+//  聊天人模型
+
+#import <Foundation/Foundation.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+@interface MYDataChatPerson : NSObject
+
+@property (nonatomic, assign) long long userId;/**<  用户id */
+@property (nonatomic, strong) NSString *name;/**<  名称 */
+@property (nonatomic, strong) NSString *iconURL;/**<  头像 */
+
+@end
+
+NS_ASSUME_NONNULL_END
