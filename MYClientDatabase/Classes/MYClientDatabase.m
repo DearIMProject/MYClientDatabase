@@ -6,14 +6,15 @@
 //
 
 #import "MYClientDatabase.h"
+#import "MYChatPersonManager.h"
 #import <fmdb/FMDB.h>
 
 NSString *kDatabaseName = @"database.sqlite";
 
 @interface MYClientDatabase ()
 
-@property (nonatomic, assign) BOOL openSuccess;
-@property (nonatomic, strong) FMDatabase *database;
+@property(nonatomic, assign) BOOL openSuccess;
+@property(nonatomic, strong) FMDatabase *database;
 
 @end
 
@@ -28,31 +29,78 @@ NSString *kDatabaseName = @"database.sqlite";
     return instance;
 }
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
+        [self removeDatabaseFile];
         [self copyDatabaseToHomeDirectory];
         [self openSqlDataBase];
     }
     return self;
 }
 
+#pragma mark - ChatPerson
+
 - (NSArray<MYDataChatPerson *> *)getAllChatPersonWithUserId:(long long)userId {
-    FMResultSet *resultSet = [self.database executeQuery:@"SELECT userId,username,icon FROM tb_user where affUserId=?",userId];
-    //TODO: wmy
-    NSMutableArray<MYDataChatPerson *> *chatPersons = [NSMutableArray array];
-    while (resultSet.next) {
-        MYDataChatPerson *person = [[MYDataChatPerson alloc] init];
-        person.userId = [resultSet intForColumn:@"userId"];
-        person.name = [resultSet stringForColumn:@"username"];
-        person.iconURL = [resultSet stringForColumn:@"icon"];
+    NSArray<MYDataChatPerson *> *chatPersons = theChatPersonManager.cacheChatPersons;
+    if (!chatPersons.count) {
+        return [self dataGetAllChatPersonWithUserId:userId];
     }
     return chatPersons;
 }
 
+- (NSArray<MYDataChatPerson *> *)dataGetAllChatPersonWithUserId:(long long)userId {
+    NSMutableArray<MYDataChatPerson *> *chatPersons = [NSMutableArray array];
+    if (!self.database.isOpen) {
+        return chatPersons;
+    }
+    NSString *sql = @"select userId,username,icon,affUserId from tb_user where affUserId = ?";
+    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
+    while (resultSet.next) {
+        MYDataChatPerson *person = [[MYDataChatPerson alloc] init];
+        person.userId = [resultSet longLongIntForColumn:@"userId"];
+        person.name = [resultSet stringForColumn:@"username"];
+        person.iconURL = [resultSet stringForColumn:@"icon"];
+        person.affUserId = [resultSet longLongIntForColumn:@"affUserId"];
+        person.iconURL = [resultSet stringForColumn:@"icon"];
+        [chatPersons addObject:person];
+    }
+    [theChatPersonManager resetChatPersons:chatPersons];
+    return chatPersons;
+}
+
+
+- (void)removeDatabaseFile {
+    NSString *dstPath = [self docDBFilePath];
+    BOOL isFileExist = [[NSFileManager defaultManager] fileExistsAtPath:dstPath];
+    if (isFileExist) {
+        NSError *error;
+        [NSFileManager.defaultManager removeItemAtPath:dstPath error:&error];
+        NSLog(@"error = %@", error);
+    }
+
+}
+
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId {
-    return nil;
+    NSMutableArray<MYDataMessage *> *chatMessages = [NSMutableArray array];
+    if (!self.database.isOpen) {
+        return chatMessages;
+    }
+    NSString *sql = @"select msgId,fromEntity,fromId,toId,toEntity messageType,content,sendSuccess,timestamp from tb_message where affUserId = ?";
+    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
+    while (resultSet.next) {
+        MYDataMessage *message = [[MYDataMessage alloc] init];
+        message.msgId = [resultSet longLongIntForColumn:@"msgId"];
+        message.fromEntity = [resultSet intForColumn:@"fromEntity"];
+        message.fromId = [resultSet longLongIntForColumn:@"fromId"];
+        message.toEntity = [resultSet intForColumn:@"toEntity"];
+        message.toId = [resultSet longLongIntForColumn:@"toId"];
+        message.messageType = [resultSet intForColumn:@"messageType"];
+        message.content = [resultSet stringForColumn:@"content"];
+        message.sendSuccess = [resultSet boolForColumn:@"sendSuccess"];
+        [chatMessages addObject:message];
+    }
+    return chatMessages;
 }
 
 - (NSString *)docDBFilePath {
@@ -64,18 +112,22 @@ NSString *kDatabaseName = @"database.sqlite";
 
 - (void)copyDatabaseToHomeDirectory {
     //TODO: wmy 将sqlite放到home目录下
-    NSString *filePath = [[NSBundle mainBundle] pathForResource:kDatabaseName ofType:nil];
+    NSString *filePath = [[NSBundle bundleForClass:self.class] pathForResource:[NSString stringWithFormat:@"MYClientDatabase.bundle/%@", kDatabaseName] ofType:nil];
     NSString *dstPath = [self docDBFilePath];
-    NSLog(@"dstPath = %@",dstPath);
-    NSError *error;
-    [[NSFileManager defaultManager] copyItemAtPath:filePath toPath:dstPath error:&error];
-    NSLog(@"");
+    BOOL isFileExist = [[NSFileManager defaultManager] fileExistsAtPath:dstPath];
+    if (!isFileExist) {
+        NSLog(@"dstPath = %@", dstPath);
+        NSError *error;
+        [[NSFileManager defaultManager] copyItemAtPath:filePath toPath:dstPath error:&error];
+        NSLog(@"error = %@", error);
+    }
+
 }
 
 // 打开数据库
 - (void)openSqlDataBase {
     // _db是数据库的句柄,即数据库的象征,如果对数据库进行增删改查,就得操作这个示例
-    
+
     // 获取数据库文件的路径
     NSString *docPath = [self docDBFilePath];
     self.database = [FMDatabase databaseWithPath:docPath];

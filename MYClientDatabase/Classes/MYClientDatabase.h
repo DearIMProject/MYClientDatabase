@@ -8,6 +8,8 @@
 #import <Foundation/Foundation.h>
 #import "MYDataChatPerson.h"
 #import "MYDataMessage.h"
+#import "MYChatPersonManager.h"
+
 
 #define theDatabase MYClientDatabase.database
 

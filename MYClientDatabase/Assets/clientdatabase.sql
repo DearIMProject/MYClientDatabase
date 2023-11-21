@@ -23,6 +23,7 @@ CREATE TABLE "tb_message" (
     "toEntity" INTEGER,
     "messageType" INTEGER,
     "content" TEXT,
+    "affUserId" integer,
     "sendSuccess" integer,
     "timestamp" INTEGER NOT null default 0
 );

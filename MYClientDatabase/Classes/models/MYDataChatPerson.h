@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) long long userId;/**<  用户id */
 @property (nonatomic, strong) NSString *name;/**<  名称 */
 @property (nonatomic, strong) NSString *iconURL;/**<  头像 */
+@property (nonatomic, assign) long long affUserId;/**<  属于哪个user */
 
 @end
 
