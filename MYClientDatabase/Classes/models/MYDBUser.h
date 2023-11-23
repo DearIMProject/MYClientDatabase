@@ -1,5 +1,5 @@
 //
-//  MYDataChatPerson.h
+//  MYDBUser.h
 //  AFNetworking
 //
 //  Created by APPLE on 2023/11/17.
@@ -9,7 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MYDataChatPerson : NSObject
+@interface MYDBUser : NSObject
 
 @property (nonatomic, assign) long long userId;/**<  用户id */
 @property (nonatomic, strong) NSString *name;/**<  名称 */

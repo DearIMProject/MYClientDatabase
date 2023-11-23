@@ -6,8 +6,9 @@
 //
 
 #import "MYClientDatabase.h"
-#import "MYChatPersonManager.h"
+#import "MYChatUserManager.h"
 #import <fmdb/FMDB.h>
+#import "MYChatMessageManager.h"
 
 NSString *kDatabaseName = @"database.sqlite";
 
@@ -41,32 +42,16 @@ NSString *kDatabaseName = @"database.sqlite";
 
 #pragma mark - ChatPerson
 
-- (NSArray<MYDataChatPerson *> *)getAllChatPersonWithUserId:(long long)userId {
-    NSArray<MYDataChatPerson *> *chatPersons = theChatPersonManager.cacheChatPersons;
+- (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId {
+    NSArray<MYDBUser *> *chatPersons = theChatUserManager.cacheChatPersons;
     if (!chatPersons.count) {
         return [self dataGetAllChatPersonWithUserId:userId];
     }
     return chatPersons;
 }
 
-- (NSArray<MYDataChatPerson *> *)dataGetAllChatPersonWithUserId:(long long)userId {
-    NSMutableArray<MYDataChatPerson *> *chatPersons = [NSMutableArray array];
-    if (!self.database.isOpen) {
-        return chatPersons;
-    }
-    NSString *sql = @"select userId,username,icon,affUserId from tb_user where affUserId = ?";
-    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
-    while (resultSet.next) {
-        MYDataChatPerson *person = [[MYDataChatPerson alloc] init];
-        person.userId = [resultSet longLongIntForColumn:@"userId"];
-        person.name = [resultSet stringForColumn:@"username"];
-        person.iconURL = [resultSet stringForColumn:@"icon"];
-        person.affUserId = [resultSet longLongIntForColumn:@"affUserId"];
-        person.iconURL = [resultSet stringForColumn:@"icon"];
-        [chatPersons addObject:person];
-    }
-    [theChatPersonManager resetChatPersons:chatPersons];
-    return chatPersons;
+- (NSArray<MYDBUser *> *)dataGetAllChatPersonWithUserId:(long long)userId {
+    return [theChatUserManager dataGetAllChatPersonWithUserId:userId];
 }
 
 
@@ -78,29 +63,14 @@ NSString *kDatabaseName = @"database.sqlite";
         [NSFileManager.defaultManager removeItemAtPath:dstPath error:&error];
         NSLog(@"error = %@", error);
     }
+}
 
+- (void)addChatMessage:(MYDataMessage *)message {
+    //TODO: wmy 
 }
 
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId {
-    NSMutableArray<MYDataMessage *> *chatMessages = [NSMutableArray array];
-    if (!self.database.isOpen) {
-        return chatMessages;
-    }
-    NSString *sql = @"select msgId,fromEntity,fromId,toId,toEntity messageType,content,sendSuccess,timestamp from tb_message where affUserId = ?";
-    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
-    while (resultSet.next) {
-        MYDataMessage *message = [[MYDataMessage alloc] init];
-        message.msgId = [resultSet longLongIntForColumn:@"msgId"];
-        message.fromEntity = [resultSet intForColumn:@"fromEntity"];
-        message.fromId = [resultSet longLongIntForColumn:@"fromId"];
-        message.toEntity = [resultSet intForColumn:@"toEntity"];
-        message.toId = [resultSet longLongIntForColumn:@"toId"];
-        message.messageType = [resultSet intForColumn:@"messageType"];
-        message.content = [resultSet stringForColumn:@"content"];
-        message.sendSuccess = [resultSet boolForColumn:@"sendSuccess"];
-        [chatMessages addObject:message];
-    }
-    return chatMessages;
+    return [theChatMessageManager getChatMessageWithPerson:userId];
 }
 
 - (NSString *)docDBFilePath {
@@ -131,9 +101,11 @@ NSString *kDatabaseName = @"database.sqlite";
     // 获取数据库文件的路径
     NSString *docPath = [self docDBFilePath];
     self.database = [FMDatabase databaseWithPath:docPath];
+    theChatMessageManager.database = self.database;
+    theChatUserManager.database = self.database;
     if (!self.database.isOpen) {
         self.openSuccess = self.database.open;
-        NSLog(@"数据库打开成功");
+        NSLog(@"😄数据库打开成功");
     }
 }
 
