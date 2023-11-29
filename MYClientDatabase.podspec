@@ -14,7 +14,7 @@ TODO: Add long description of the pod here.
   s.author           = { 'wenmy' => 'wenmy@tuya.com' }
   s.source           = { :git => 'https://github.com/mingyanwen/MYClientDatabase.git', :tag => s.version.to_s }
 
-  s.ios.deployment_target = '10.0'
+  s.ios.deployment_target = '15.0'
 
   s.source_files = 'MYClientDatabase/Classes/**/*'
   s.public_header_files = 'MYClientDatabase/Classes/**/*.h'
