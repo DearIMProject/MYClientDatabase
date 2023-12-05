@@ -17,10 +17,11 @@ TODO: Add long description of the pod here.
   s.ios.deployment_target = '15.0'
 
   s.source_files = 'MYClientDatabase/Classes/**/*'
-  s.public_header_files = 'MYClientDatabase/Classes/**/*.h'
+  s.public_header_files = 'MYClientDatabase/Classes/public/**/*.h'
   s.resource_bundles = {
     'MYClientDatabase' => ['MYClientDatabase/Assets/**/*.sqlite']
   }
+   
    
    s.dependency 'FMDB'
 end

@@ -11,6 +11,7 @@ CREATE TABLE "tb_user" (
     "vip_status" INTEGER,
     "vip_expired" INTEGER,
     "os" TEXT,
+    "isInChat" integer,
     "register_time" INTEGER default 0
 );
 

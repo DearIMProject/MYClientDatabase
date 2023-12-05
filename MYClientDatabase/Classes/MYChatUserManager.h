@@ -19,6 +19,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)shared;
 
+
 - (NSMutableArray<MYDBUser *> *)cacheChatPersons;
 
 - (void)resetChatPersons:(NSArray<MYDBUser *> *)chatpersons;
@@ -27,9 +28,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)removeChatPerson:(MYDBUser *)chatPerson;
 
-- (MYDBUser *)chatPersonWithUserId:(long long)userId;
-
+/// 获取指定用户所有通讯录中用户的信息
+/// - Parameter userId: userId
 - (NSArray<MYDBUser *> *)dataGetAllChatPersonWithUserId:(long long)userId;
+- (BOOL)updateChatPersons:(NSArray<MYDBUser *> *)persons fromUserId:(long long)userId;
+
+- (MYDBUser *)chatPersonWithUserId:(long long)userId;
 
 @end
 

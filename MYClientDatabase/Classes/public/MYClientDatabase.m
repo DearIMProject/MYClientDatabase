@@ -41,7 +41,10 @@ NSString *kDatabaseName = @"database.sqlite";
 }
 
 #pragma mark - ChatPerson
-
+- (void)updateAllUser:(NSArray<MYDBUser *> *)users fromUid:(long long)userId {
+    //TODO: wmy
+    [theChatUserManager updateChatPersons:users fromUserId:userId];
+}
 - (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId {
     NSArray<MYDBUser *> *chatPersons = theChatUserManager.cacheChatPersons;
     if (!chatPersons.count) {
@@ -54,6 +57,21 @@ NSString *kDatabaseName = @"database.sqlite";
     return [theChatUserManager dataGetAllChatPersonWithUserId:userId];
 }
 
+- (MYDBUser *)getChatPersonWithUserId:(long long)userId {
+    return [theChatUserManager chatPersonWithUserId:userId];
+}
+
+#pragma mark - message
+
+- (void)addChatMessage:(MYDataMessage *)message {
+    //TODO: wmy 
+}
+
+- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId {
+    return [theChatMessageManager getChatMessageWithPerson:userId];
+}
+
+#pragma mark - file
 
 - (void)removeDatabaseFile {
     NSString *dstPath = [self docDBFilePath];
@@ -64,15 +82,6 @@ NSString *kDatabaseName = @"database.sqlite";
         NSLog(@"error = %@", error);
     }
 }
-
-- (void)addChatMessage:(MYDataMessage *)message {
-    //TODO: wmy 
-}
-
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId {
-    return [theChatMessageManager getChatMessageWithPerson:userId];
-}
-
 - (NSString *)docDBFilePath {
     NSArray *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *docDirectory = [path objectAtIndex:0];

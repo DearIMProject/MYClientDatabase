@@ -6,6 +6,15 @@
 //
 
 #import "MYChatUserManager.h"
+#import <MYUtils/MYUtils.h>
+
+NSString *kUserTable = @"tb_user";
+NSString *kUserId = @"userId";
+NSString *kUserName = @"username";
+NSString *kEmail = @"email";
+NSString *kIcon = @"icon";
+NSString *kStatus = @"status";
+NSString *kAffUserId = @"affUserId";
 
 @interface MYChatUserManager ()
 
@@ -37,19 +46,51 @@
     if (!self.database.isOpen) {
         return chatPersons;
     }
-    NSString *sql = @"select userId,username,icon,affUserId from tb_user where affUserId = ?";
-    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
+//    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kAffUserId,kIcon,kUserTable,kAffUserId];
+    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ ",kUserId,kUserName,kAffUserId,kIcon,kUserTable];
+    [MYLog debug:sql];
+//    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
+    FMResultSet *resultSet = [self.database executeQuery:sql];
     while (resultSet.next) {
         MYDBUser *person = [[MYDBUser alloc] init];
-        person.userId = [resultSet longLongIntForColumn:@"userId"];
-        person.name = [resultSet stringForColumn:@"username"];
-        person.iconURL = [resultSet stringForColumn:@"icon"];
-        person.affUserId = [resultSet longLongIntForColumn:@"affUserId"];
-        person.iconURL = [resultSet stringForColumn:@"icon"];
+        person.userId = [resultSet longLongIntForColumn:kUserId];
+        person.name = [resultSet stringForColumn:kUserName];
+        person.iconURL = [resultSet stringForColumn:kIcon];
+        person.affUserId = [resultSet longLongIntForColumn:kAffUserId];
         [chatPersons addObject:person];
     }
     [theChatUserManager resetChatPersons:chatPersons];
     return chatPersons;
+}
+
+- (BOOL)updateChatPersons:(NSArray<MYDBUser *> *)persons fromUserId:(long long)userId {
+    //TODO: wmy
+    [self.database beginTransaction];
+    BOOL isSuccess = YES;
+    
+    @try {
+        for (MYDBUser *user in persons) {
+            NSString *sql = [NSString stringWithFormat:@"INSERT into %@(%@,%@,%@,%@,%@,%@) values (?,?,?,?,?,?)",kUserTable,kUserId,kUserName,kIcon,kAffUserId,kEmail,kStatus];
+            [MYLog debug:sql];
+            isSuccess = [self.database executeUpdate:sql,
+                         @(user.userId),
+                         user.name,
+                         user.iconURL,
+                         @(userId),
+                         user.email,
+                         @(user.status)];
+        }
+    } @catch (NSException *exception) {
+        isSuccess = NO;
+        [self.database rollback];
+    } @finally {
+        if (isSuccess) {
+            [self.database commit];
+            [self.cacheChatPersons addObjectsFromArray:persons];
+        }
+    }
+    return isSuccess;
+    
 }
 
 - (void)updateChatPerson:(MYDBUser *)chatPerson {
@@ -79,6 +120,22 @@
             return chatPerson;
         }
     }
+    return [self dataUserWithUserId:userId];
+}
+
+- (MYDBUser *)dataUserWithUserId:(long long)userId {
+    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kAffUserId,kIcon,kUserTable,kUserId];
+    [MYLog debug:sql];
+    FMResultSet *resultSet = [self.database executeQuery:sql];
+    if (resultSet.next) {
+        MYDBUser *person = [[MYDBUser alloc] init];
+        person.userId = [resultSet longLongIntForColumn:kUserId];
+        person.name = [resultSet stringForColumn:kUserName];
+        person.iconURL = [resultSet stringForColumn:kIcon];
+        person.affUserId = [resultSet longLongIntForColumn:kAffUserId];
+        return person;
+    }
     return nil;
 }
+
 @end
