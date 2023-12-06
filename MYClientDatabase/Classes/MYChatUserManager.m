@@ -14,11 +14,13 @@ NSString *kUserName = @"username";
 NSString *kEmail = @"email";
 NSString *kIcon = @"icon";
 NSString *kStatus = @"status";
-NSString *kAffUserId = @"affUserId";
+NSString *kUserAffUserId = @"affUserId";
+NSString *kIsInChat = @"isInChat";
 
 @interface MYChatUserManager ()
 
-@property(nonatomic, strong) NSMutableArray<MYDBUser *> *cacheChatPersons;/**<  通讯录缓存 */
+@property(nonatomic, strong) NSMutableArray<MYDBUser *> *cacheAddressPersons;/**<  通讯录缓存 */
+@property (nonatomic, strong) NSMutableArray<MYDBUser *> *cacheChatPersons;/**<  正在聊天的人的缓存 */
 
 @end
 
@@ -36,9 +38,46 @@ NSString *kAffUserId = @"affUserId";
 - (instancetype)init {
     self = [super init];
     if (self) {
+        _cacheAddressPersons = [NSMutableArray array];
         _cacheChatPersons = [NSMutableArray array];
     }
     return self;
+}
+
+- (NSArray<MYDBUser *> *)getChatPersonWithUserId:(long long)userId {
+    if (self.cacheChatPersons.count) {
+        return self.cacheChatPersons;
+    }
+    return [self getDataChatPersonWithUserId:userId];
+}
+
+- (NSArray<MYDBUser *> *)getDataChatPersonWithUserId:(long long)userId {
+    NSMutableArray<MYDBUser *> *chatPersons = [NSMutableArray array];
+    NSString *sql = [NSString stringWithFormat:@"select "
+                     " %@,%@,%@,%@ from %@"
+                     " where %@ = ? and %@ = ?",
+                     kUserId,kUserName,kUserAffUserId,kIcon,kUserTable,
+                     kUserAffUserId,kIsInChat];
+    [MYLog debug:sql];
+    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId),@(1)];
+    while (resultSet.next) {
+        MYDBUser *person = [[MYDBUser alloc] init];
+        person.userId = [resultSet longLongIntForColumn:kUserId];
+        person.name = [resultSet stringForColumn:kUserName];
+        person.iconURL = [resultSet stringForColumn:kIcon];
+        person.affUserId = [resultSet longLongIntForColumn:kUserAffUserId];
+        [chatPersons addObject:person];
+    }
+    [theChatUserManager resetAddressPersons:chatPersons];
+    return chatPersons;
+}
+
+- (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId {
+    if (self.cacheAddressPersons.count) {
+        return self.cacheAddressPersons;
+    }
+    [self.cacheChatPersons addObjectsFromArray:[self dataGetAllChatPersonWithUserId:userId]];
+    return self.cacheChatPersons;
 }
 
 - (NSArray<MYDBUser *> *)dataGetAllChatPersonWithUserId:(long long)userId {
@@ -46,20 +85,18 @@ NSString *kAffUserId = @"affUserId";
     if (!self.database.isOpen) {
         return chatPersons;
     }
-//    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kAffUserId,kIcon,kUserTable,kAffUserId];
-    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ ",kUserId,kUserName,kAffUserId,kIcon,kUserTable];
+    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kUserAffUserId,kIcon,kUserTable,kUserAffUserId];
     [MYLog debug:sql];
-//    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
-    FMResultSet *resultSet = [self.database executeQuery:sql];
+    FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
     while (resultSet.next) {
         MYDBUser *person = [[MYDBUser alloc] init];
         person.userId = [resultSet longLongIntForColumn:kUserId];
         person.name = [resultSet stringForColumn:kUserName];
         person.iconURL = [resultSet stringForColumn:kIcon];
-        person.affUserId = [resultSet longLongIntForColumn:kAffUserId];
+        person.affUserId = [resultSet longLongIntForColumn:kUserAffUserId];
         [chatPersons addObject:person];
     }
-    [theChatUserManager resetChatPersons:chatPersons];
+    [self resetAddressPersons:chatPersons];
     return chatPersons;
 }
 
@@ -70,15 +107,17 @@ NSString *kAffUserId = @"affUserId";
     
     @try {
         for (MYDBUser *user in persons) {
-            NSString *sql = [NSString stringWithFormat:@"INSERT into %@(%@,%@,%@,%@,%@,%@) values (?,?,?,?,?,?)",kUserTable,kUserId,kUserName,kIcon,kAffUserId,kEmail,kStatus];
+            NSString *sql = [NSString stringWithFormat:@"INSERT into "
+                             " %@(%@,%@,%@,%@,%@,%@) values (?,?,?,?,?,?)",kUserTable,
+                             kUserId,kUserName,kIcon,kEmail,kStatus,kUserAffUserId];
             [MYLog debug:sql];
             isSuccess = [self.database executeUpdate:sql,
                          @(user.userId),
                          user.name,
                          user.iconURL,
-                         @(userId),
                          user.email,
-                         @(user.status)];
+                         @(user.status),
+                         @(userId)];
         }
     } @catch (NSException *exception) {
         isSuccess = NO;
@@ -86,27 +125,40 @@ NSString *kAffUserId = @"affUserId";
     } @finally {
         if (isSuccess) {
             [self.database commit];
-            [self.cacheChatPersons addObjectsFromArray:persons];
+            [self.cacheAddressPersons addObjectsFromArray:persons];
         }
     }
     return isSuccess;
     
 }
 
+- (BOOL)updateUser:(MYDBUser *)user inChat:(BOOL)inchat belongUserId:(long long)ownerUserId {
+    NSString *sql = [NSString stringWithFormat:@"update %@ SET %@ = ? where %@ = ? and %@ = ?",kUserTable,kIsInChat,kUserId,kUserAffUserId];
+    [MYLog debug:sql];
+    NSInteger chat = inchat? 1 : 0;
+    BOOL isSuccess = [self.database executeUpdate:sql,@(chat),@(user.userId),@(ownerUserId)];
+    return isSuccess;
+}
+
 - (void)updateChatPerson:(MYDBUser *)chatPerson {
     //TODO: wmy 判断通讯录是否存在
-    [_cacheChatPersons addObject:chatPerson];
+    [_cacheAddressPersons addObject:chatPerson];
 }
 
 - (void)removeChatPerson:(MYDBUser *)chatPerson {
     MYDBUser *findChatPerson;
-    for (MYDBUser *removeChatPerson in _cacheChatPersons) {
+    for (MYDBUser *removeChatPerson in _cacheAddressPersons) {
         if (removeChatPerson.userId == chatPerson.userId) {
             findChatPerson = removeChatPerson;
             break;
         }
     }
-    [_cacheChatPersons removeObject:findChatPerson];
+    [_cacheAddressPersons removeObject:findChatPerson];
+}
+
+- (void)resetAddressPersons:(NSArray<MYDBUser *> *)chatpersons {
+    [_cacheAddressPersons removeAllObjects];
+    [_cacheAddressPersons addObjectsFromArray:chatpersons];
 }
 
 - (void)resetChatPersons:(NSArray<MYDBUser *> *)chatpersons {
@@ -115,8 +167,8 @@ NSString *kAffUserId = @"affUserId";
 }
 
 - (MYDBUser *)chatPersonWithUserId:(long long)userId {
-    for (MYDBUser *chatPerson in _cacheChatPersons) {
-        if (chatPerson.userId == userId) {
+    for (MYDBUser *chatPerson in _cacheAddressPersons) {
+        if (chatPerson.affUserId == userId) {
             return chatPerson;
         }
     }
@@ -124,7 +176,7 @@ NSString *kAffUserId = @"affUserId";
 }
 
 - (MYDBUser *)dataUserWithUserId:(long long)userId {
-    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kAffUserId,kIcon,kUserTable,kUserId];
+    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kUserAffUserId,kIcon,kUserTable,kUserId];
     [MYLog debug:sql];
     FMResultSet *resultSet = [self.database executeQuery:sql];
     if (resultSet.next) {
@@ -132,7 +184,7 @@ NSString *kAffUserId = @"affUserId";
         person.userId = [resultSet longLongIntForColumn:kUserId];
         person.name = [resultSet stringForColumn:kUserName];
         person.iconURL = [resultSet stringForColumn:kIcon];
-        person.affUserId = [resultSet longLongIntForColumn:kAffUserId];
+        person.affUserId = [resultSet longLongIntForColumn:kUserAffUserId];
         return person;
     }
     return nil;

@@ -11,7 +11,7 @@ CREATE TABLE "tb_user" (
     "vip_status" INTEGER,
     "vip_expired" INTEGER,
     "os" TEXT,
-    "isInChat" integer,
+    "isInChat" boolean default 0,
     "register_time" INTEGER default 0
 );
 
@@ -25,6 +25,6 @@ CREATE TABLE "tb_message" (
     "messageType" INTEGER,
     "content" TEXT,
     "affUserId" integer,
-    "sendSuccess" integer,
+    "sendStatus" integer,
     "timestamp" INTEGER NOT null default 0
 );

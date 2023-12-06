@@ -42,33 +42,32 @@ NSString *kDatabaseName = @"database.sqlite";
 
 #pragma mark - ChatPerson
 - (void)updateAllUser:(NSArray<MYDBUser *> *)users fromUid:(long long)userId {
-    //TODO: wmy
     [theChatUserManager updateChatPersons:users fromUserId:userId];
 }
 - (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId {
-    NSArray<MYDBUser *> *chatPersons = theChatUserManager.cacheChatPersons;
-    if (!chatPersons.count) {
-        return [self dataGetAllChatPersonWithUserId:userId];
-    }
-    return chatPersons;
+    return [theChatUserManager getAllChatPersonWithUserId:userId];
 }
 
-- (NSArray<MYDBUser *> *)dataGetAllChatPersonWithUserId:(long long)userId {
-    return [theChatUserManager dataGetAllChatPersonWithUserId:userId];
+- (NSArray<MYDBUser *> *)getChatListWithUserId:(long long)userId {
+    return [theChatUserManager getChatPersonWithUserId:userId];
 }
 
 - (MYDBUser *)getChatPersonWithUserId:(long long)userId {
     return [theChatUserManager chatPersonWithUserId:userId];
 }
 
-#pragma mark - message
-
-- (void)addChatMessage:(MYDataMessage *)message {
-    //TODO: wmy 
+- (void)setUserInChat:(MYDBUser *)user withOwnerUserId:(long long)userId {
+    [theChatUserManager updateUser:user inChat:YES belongUserId:userId];
 }
 
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId {
-    return [theChatMessageManager getChatMessageWithPerson:userId];
+#pragma mark - message
+
+- (BOOL)addChatMessage:(MYDataMessage *)message fromUserId:(long long)userId belongToUserId:(long long)ownerUserId{
+    return [theChatMessageManager addMessage:message fromUserId:userId belongToUserId:ownerUserId];
+}
+
+- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId {
+    return [theChatMessageManager getChatMessageWithPerson:userId belongToUserId:owneruserId];
 }
 
 #pragma mark - file

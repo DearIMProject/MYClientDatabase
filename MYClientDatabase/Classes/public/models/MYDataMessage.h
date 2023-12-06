@@ -8,6 +8,11 @@
 #import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
+typedef enum : NSUInteger {
+    MYDataMessageStatus_loading,
+    MYDataMessageStatus_Success,
+    MYDataMessageStatus_Failure,
+} MYDataMessageStatus;
 
 @interface MYDataMessage : NSObject
 
@@ -19,7 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString *content;/**<  内容 */
 @property (nonatomic, assign) int messageType;/**<  messageType */
 @property (nonatomic, assign) long timestamp;
-@property (nonatomic, assign) BOOL sendSuccess;/**<  是否发送成功 */
+@property (nonatomic, assign) MYDataMessageStatus sendStatus;/**<  是否发送成功 */
 
 @end
 

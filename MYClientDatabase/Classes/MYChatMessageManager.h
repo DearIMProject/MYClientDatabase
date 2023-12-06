@@ -18,8 +18,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) FMDatabase *database;/**< 数据库  */
 
 + (instancetype)shared;
+// userId 对话的人
+// ownerUserId 该对话的拥有者
+- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)userId;
 
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId;
+- (BOOL)addMessage:(MYDataMessage *)message fromUserId:(long long)userId belongToUserId:(long long)userId;
+
+- (BOOL)updateMessageWithSendSuccess:(NSTimeInterval)timestamp fromUserId:(long long)userId belongToUserId:(long long)userId;
 
 @end
 
