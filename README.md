@@ -22,7 +22,7 @@ pod 'MYClientDatabase'
 
 ## Author
 
-温明妍, wenmy@tuya.com
+mingyan, wenmingyan1990@gmail.com
 
 ## License
 
