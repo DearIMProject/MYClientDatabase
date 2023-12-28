@@ -33,7 +33,8 @@ NSString *kDatabaseName = @"database.sqlite";
 - (instancetype)init {
     self = [super init];
     if (self) {
-        [self removeDatabaseFile];
+//        TODO: wmy 测试，每次启动都删除原始文件
+//        [self removeDatabaseFile];
         [self copyDatabaseToHomeDirectory];
         [self openSqlDataBase];
     }
