@@ -34,7 +34,7 @@ NSString *kDatabaseName = @"database.sqlite";
     self = [super init];
     if (self) {
 //        TODO: wmy 测试，每次启动都删除原始文件
-//        [self removeDatabaseFile];
+        [self removeDatabaseFile];
         [self copyDatabaseToHomeDirectory];
         [self openSqlDataBase];
     }
@@ -63,14 +63,21 @@ NSString *kDatabaseName = @"database.sqlite";
 
 #pragma mark - message
 
-- (BOOL)addChatMessage:(MYDataMessage *)message fromUserId:(long long)userId belongToUserId:(long long)ownerUserId{
-    return [theChatMessageManager addMessage:message fromUserId:userId belongToUserId:ownerUserId];
+- (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId{
+    return [theChatMessageManager addMessage:message withUserId:userId belongToUserId:ownerUserId];
 }
 
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId {
     return [theChatMessageManager getChatMessageWithPerson:userId belongToUserId:owneruserId];
 }
 
+- (BOOL)sendSuccessWithTimer:(NSTimeInterval)timer messageId:(long long)messageId withUserId:(long long)fromId belongToUserId:(long long)owneruserId {
+    return [theChatMessageManager updateMessageWithSendSuccess:timer messageId:messageId withUserId:fromId belongToUserId:owneruserId];
+}
+- (int)getNotReadNumberWithUserId:(long long)userId
+                   belongToUserId:(long long)owneruserId {
+    return [theChatMessageManager getNotReadNumberWithUserId:userId belongToUserId:owneruserId];
+}
 #pragma mark - file
 
 - (void)removeDatabaseFile {

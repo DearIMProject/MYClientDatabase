@@ -25,8 +25,19 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MYClientDatabase (MYDBMessage)
 
-- (BOOL)addChatMessage:(MYDataMessage *)message fromUserId:(long long)userId belongToUserId:(long long)ownerUserId;
+- (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId;
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId;
+
+- (BOOL)sendSuccessWithTimer:(NSTimeInterval)timer messageId:(long long)messageId withUserId:(long long)fromId belongToUserId:(long long)owneruserId;
+
+/// 获取针对userId聊天的消息未读数量
+/// - Parameters:
+///   - userId: 聊天用户
+///   - owneruserId: userId
+- (int)getNotReadNumberWithUserId:(long long)userId
+                   belongToUserId:(long long)owneruserId;
+
+
 @end
 
 @interface MYClientDatabase (MYDBUser)
@@ -49,7 +60,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setUserInChat:(MYDBUser *)user withOwnerUserId:(long long)userId;
 
 @end
-
 
 
 NS_ASSUME_NONNULL_END

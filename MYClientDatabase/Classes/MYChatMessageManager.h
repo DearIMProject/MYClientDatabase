@@ -20,11 +20,46 @@ NS_ASSUME_NONNULL_BEGIN
 + (instancetype)shared;
 // userId 对话的人
 // ownerUserId 该对话的拥有者
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)userId;
 
-- (BOOL)addMessage:(MYDataMessage *)message fromUserId:(long long)userId belongToUserId:(long long)userId;
 
-- (BOOL)updateMessageWithSendSuccess:(NSTimeInterval)timestamp fromUserId:(long long)userId belongToUserId:(long long)userId;
+/// 获取当前用户userId与用户personUserId的对话
+/// - Parameters:
+///   - personuserId: 对话的用户
+///   - userId: 当前用户
+- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)personUserId belongToUserId:(long long)userId;
+
+/// 当前用户userId向用户personUserId添加一条消息
+/// - Parameters:
+///   - message: 消息体
+///   - personUserId: 当前聊天的人
+///   - userId: 当前用户
+- (BOOL)addMessage:(MYDataMessage *)message withUserId:(long long)personUserId belongToUserId:(long long)userId;
+
+/// 发送的消息成功送达
+/// - Parameters:
+///   - messageId: 消息Id
+///   - timestamp: 消息时间戳
+///   - personUserId: 对话的用户
+///   - userId: 当前用户
+- (BOOL)updateMessageWithSendSuccess:(NSTimeInterval)timestamp
+                           messageId:(long long)messageId
+                          withUserId:(long long)userId
+                      belongToUserId:(long long)owneruserId;
+
+
+/// 获取当前聊天下未读消息
+/// - Parameters:
+///   - userId: 当前聊天的用户
+///   - owneruserId: 当前用户
+- (int)getNotReadNumberWithUserId:(long long)userId
+                   belongToUserId:(long long)owneruserId;
+
+/// 添加一个已读用户到信息中
+/// - Parameters:
+///   - userId: 已读用户id
+///   - messageId: 信息id
+- (void)addReadUserId:(long long)userId
+        withMessageId:(long long)messageId;
 
 @end
 

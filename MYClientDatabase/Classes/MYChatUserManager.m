@@ -58,7 +58,7 @@ NSString *kIsInChat = @"isInChat";
                      " where %@ = ? and %@ = ?",
                      kUserId,kUserName,kUserAffUserId,kIcon,kUserTable,
                      kUserAffUserId,kIsInChat];
-    [MYLog debug:sql];
+    [MYLog debug:@"📚sql = %@",sql];
     FMResultSet *resultSet = [self.database executeQuery:sql, @(userId),@(1)];
     while (resultSet.next) {
         MYDBUser *person = [[MYDBUser alloc] init];
@@ -86,7 +86,7 @@ NSString *kIsInChat = @"isInChat";
         return chatPersons;
     }
     NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kUserAffUserId,kIcon,kUserTable,kUserAffUserId];
-    [MYLog debug:sql];
+    [MYLog debug:@"📚sql = %@",sql];
     FMResultSet *resultSet = [self.database executeQuery:sql, @(userId)];
     while (resultSet.next) {
         MYDBUser *person = [[MYDBUser alloc] init];
@@ -102,14 +102,14 @@ NSString *kIsInChat = @"isInChat";
 
 - (BOOL)updateChatPersons:(NSArray<MYDBUser *> *)persons fromUserId:(long long)userId {
     [self.database beginTransaction];
-    BOOL isSuccess = YES;
+    BOOL isSuccess = NO;
     
     @try {
         for (MYDBUser *user in persons) {
             NSString *sql = [NSString stringWithFormat:@"INSERT into "
                              " %@(%@,%@,%@,%@,%@,%@) values (?,?,?,?,?,?)",kUserTable,
                              kUserId,kUserName,kIcon,kEmail,kStatus,kUserAffUserId];
-            [MYLog debug:sql];
+            [MYLog debug:@"📚sql = %@",sql];
             isSuccess = [self.database executeUpdate:sql,
                          @(user.userId),
                          user.name,
@@ -132,11 +132,22 @@ NSString *kIsInChat = @"isInChat";
 }
 
 - (BOOL)updateUser:(MYDBUser *)user inChat:(BOOL)inchat belongUserId:(long long)ownerUserId {
-    NSString *sql = [NSString stringWithFormat:@"update %@ SET %@ = ? where %@ = ? and %@ = ?",kUserTable,kIsInChat,kUserId,kUserAffUserId];
-    [MYLog debug:sql];
-    NSInteger chat = inchat? 1 : 0;
-    BOOL isSuccess = [self.database executeUpdate:sql,@(chat),@(user.userId),@(ownerUserId)];
-    return isSuccess;
+    [self.database beginTransaction];
+    BOOL isSuccess;
+    @try {
+        NSString *sql = [NSString stringWithFormat:@"update %@ SET %@ = ? where %@ = ? and %@ = ?",kUserTable,kIsInChat,kUserId,kUserAffUserId];
+        [MYLog debug:@"📚sql = %@",sql];
+        NSInteger chat = inchat? 1 : 0;
+        isSuccess = [self.database executeUpdate:sql,@(chat),@(user.userId),@(ownerUserId)];
+    } @catch (NSException *exception) {
+        [self.database rollback];
+        NSLog(@"📚 exception = %@",exception);
+    } @finally {
+        if (isSuccess) {
+            [self.database commit];
+        }
+        return isSuccess;
+    }
 }
 
 - (void)updateChatPerson:(MYDBUser *)chatPerson {
@@ -176,7 +187,7 @@ NSString *kIsInChat = @"isInChat";
 
 - (MYDBUser *)dataUserWithUserId:(long long)userId {
     NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@ from %@ where %@ = ?",kUserId,kUserName,kUserAffUserId,kIcon,kUserTable,kUserId];
-    [MYLog debug:sql];
+    [MYLog debug:@"📚sql = %@",sql];
     FMResultSet *resultSet = [self.database executeQuery:sql,@(userId)];
     if (resultSet.next) {
         MYDBUser *person = [[MYDBUser alloc] init];
