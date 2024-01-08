@@ -19,6 +19,7 @@ NSString *kContent = @"content";
 NSString *kTimestamp = @"timestamp";
 NSString *kAffMessageUserId = @"affUserId";
 NSString *kSendStatus = @"sendStatus";
+NSString *kReadList = @"readList";
 
 //TODO: wmy 所有数据库的操作，均拉一个新的线程
 
@@ -134,7 +135,7 @@ NSString *kSendStatus = @"sendStatus";
                          kAffMessageUserId];
         [MYLog debug:@"📚sql = %@",sql];
         success = [self.database executeUpdate:sql,@(message.fromEntity),@(message.fromId),@(message.toId),@(message.toEntity),
-        @(message.messageType),message.content,@(message.sendStatus),@(message.timestamp),@(ownerUserId)];
+                   @(message.messageType),message.content,@(message.sendStatus),@(message.timestamp),@(ownerUserId)];
         [MYLog debug:@"📚数据库中添加一个message = %@,是否添加成功 %d",message,success];
         
     } @catch (NSException *exception) {
@@ -180,7 +181,7 @@ NSString *kSendStatus = @"sendStatus";
                          kSendStatus,
                          kMessageId,
                          kTimestamp
-                         ];
+        ];
         [MYLog debug:@"📚sql = %@",sql];
         success = [self.database executeUpdate:sql,@(message.sendStatus),@(message.msgId),@(message.timestamp)];
         [MYLog debug:@"📚更新数据消息成功标识,%d",success];
@@ -197,12 +198,62 @@ NSString *kSendStatus = @"sendStatus";
 
 - (int)getNotReadNumberWithUserId:(long long)userId
                    belongToUserId:(long long)owneruserId {
-//    return [theChatMessageManager getNotReadNumberWithUserId:userId belongToUserId:owneruserId];
-    //TODO: wmy 已读信息
+    int notReadList = 0;
+    NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
+    NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
+    MYDataMessage *message;
+    while (message = [reverseEnumerator nextObject]) {
+        if (!message.readList.length ||
+            [message.readList containsString:[NSString stringWithFormat:@"%lld",userId]]) {
+            notReadList ++;
+        }
+    }
+    return notReadList;
 }
 
-- (void)addReadUserId:(long long)userId withMessageId:(long long)messageId {
+- (BOOL)addReadUserId:(long long)userId withMessageId:(long long)messageId belongToUserId:(long long)owneruserId {
     //TODO: wmy
+    NSMutableString *string = [NSMutableString string];
+    NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
+    NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
+    MYDataMessage *message;
+    while (message = [reverseEnumerator nextObject]) {
+        if (message.msgId == messageId) {
+            [string appendString:message.readList];
+            [string appendFormat:@",%lld",userId];
+            message.readList = string;
+            break;
+        }
+    }
+    return [self _addReadUserId:userId withMessage:message readList:string];
+}
+
+- (BOOL)_addReadUserId:(long long)userId withMessage:(MYDataMessage *)message readList:(NSString *)readList {
+    //TODO: wmy
+    [self.database beginTransaction];
+    BOOL success = false;
+    @try {
+        NSString *sql = [NSString stringWithFormat:@"update %@ set "
+                         "%@ = ? "
+                         "where %@ = ?"
+                         ,
+                         kMessageTable,
+                         kSendStatus,
+                         kMessageId
+        ];
+        [MYLog debug:@"📚sql = %@",sql];
+        success = [self.database executeUpdate:sql,@(message.sendStatus),@(message.msgId)];
+        [MYLog debug:@"📚更新数据消息成功标识,%d",success];
+    } @catch (NSException *exception) {
+        [self.database rollback];
+        NSLog(@"exception = %@",exception);
+    } @finally {
+        if (success) {
+            [self.database commit];
+        }
+        return success;
+    }
+    return NO;
 }
 
 

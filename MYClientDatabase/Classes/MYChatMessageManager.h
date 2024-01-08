@@ -58,8 +58,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameters:
 ///   - userId: 已读用户id
 ///   - messageId: 信息id
-- (void)addReadUserId:(long long)userId
-        withMessageId:(long long)messageId;
+///   - owneruserId: 当前用户
+- (BOOL)addReadUserId:(long long)userId
+        withMessageId:(long long)messageId
+       belongToUserId:(long long)owneruserId;
 
 @end
 
