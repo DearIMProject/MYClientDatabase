@@ -22,6 +22,7 @@ NSString *kSendStatus = @"sendStatus";
 NSString *kReadList = @"readList";
 
 //TODO: wmy 所有数据库的操作，均拉一个新的线程
+//TODO: wmy 在启动App后需要先从数据库中拉取一次所有的消息
 
 @interface MYChatMessageManager ()
 
@@ -211,6 +212,10 @@ NSString *kReadList = @"readList";
     return notReadList;
 }
 
+- (int)getNotReadNumberBelongToUserId:(long long)owneruserId {
+    
+}
+
 - (BOOL)addReadUserId:(long long)userId withMessageId:(long long)messageId belongToUserId:(long long)owneruserId {
     //TODO: wmy
     NSMutableString *string = [NSMutableString string];
@@ -256,6 +261,22 @@ NSString *kReadList = @"readList";
     return NO;
 }
 
+- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId {
+    NSString *sql = [NSString stringWithFormat:@"select MAX(%@) from %@ "
+                     "where %@ = ?"
+                     ,
+                     kTimestamp,
+                     kMessageTable,
+                     kAffMessageUserId
+    ];
+    [MYLog debug:@"📚sql = %@",sql];
+    FMResultSet *resultSet = [self.database executeQuery:sql,@(owneruserId)];
+    if (resultSet.next) {
+        NSTimeInterval timestamp = [resultSet longLongIntForColumn:kTimestamp];
+        return timestamp;
+    }
+    return 0;
+}
 
 @end
  

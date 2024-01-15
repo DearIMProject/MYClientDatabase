@@ -37,6 +37,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (int)getNotReadNumberWithUserId:(long long)userId
                    belongToUserId:(long long)owneruserId;
 
+/// 当前用户所有的聊天未读数量
+/// - Parameter ownerUserId: userId
+- (int)getNotReadNumberBelongToUserId:(long long)ownerUserId;
+
+
+- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId;
 
 @end
 

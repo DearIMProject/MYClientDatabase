@@ -34,7 +34,7 @@ NSString *kDatabaseName = @"database.sqlite";
     self = [super init];
     if (self) {
 //        TODO: wmy 测试，每次启动都删除原始文件
-//        [self removeDatabaseFile];
+        [self removeDatabaseFile];
         [self copyDatabaseToHomeDirectory];
         [self openSqlDataBase];
     }
@@ -77,6 +77,14 @@ NSString *kDatabaseName = @"database.sqlite";
 - (int)getNotReadNumberWithUserId:(long long)userId
                    belongToUserId:(long long)owneruserId {
     return [theChatMessageManager getNotReadNumberWithUserId:userId belongToUserId:owneruserId];
+}
+
+- (int)getNotReadNumberBelongToUserId:(long long)ownerUserId {
+    return [theChatMessageManager getNotReadNumberBelongToUserId:ownerUserId];
+}
+
+- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId {
+    return [theChatMessageManager getLastestTimestampBelongToUserId:owneruserId];
 }
 #pragma mark - file
 

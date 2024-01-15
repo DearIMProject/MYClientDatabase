@@ -54,6 +54,8 @@ NS_ASSUME_NONNULL_BEGIN
 - (int)getNotReadNumberWithUserId:(long long)userId
                    belongToUserId:(long long)owneruserId;
 
+- (int)getNotReadNumberBelongToUserId:(long long)owneruserId;
+
 /// 添加一个已读用户到信息中
 /// - Parameters:
 ///   - userId: 已读用户id
@@ -62,6 +64,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)addReadUserId:(long long)userId
         withMessageId:(long long)messageId
        belongToUserId:(long long)owneruserId;
+
+
+/// 获取最新的时间戳
+- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId;
 
 @end
 
