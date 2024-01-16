@@ -25,7 +25,8 @@ CREATE TABLE "tb_message" (
     "messageType" INTEGER,
     "content" TEXT,
     "affUserId" integer,
-    "sendStatus" integer, -- 读取状态 0 发送中 1 已发送 2 发送失败
+    "sendStatus" integer, -- 发送状态 0 发送中 1 已发送 2 发送失败
     "readList" TEXT, -- 使用逗号分割已读人员
+    "kReadList" TEXT, -- 已读列表
     "timestamp" INTEGER NOT null default 0
 );

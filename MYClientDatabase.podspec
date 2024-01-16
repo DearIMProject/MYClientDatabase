@@ -21,6 +21,19 @@ TODO: Add long description of the pod here.
   s.resource_bundles = {
     'MYClientDatabase' => ['MYClientDatabase/Assets/**/*.sqlite']
   }
+  
+  s.subspec 'Debug' do |subspec|
+    subspec.source_files = 'MYClientDatabase/Debug/**/*'  # 模块的源代码文件
+    
+    # 模块的依赖关系
+    subspec.dependency 'MYDearDebug'
+
+    
+#     # 模块的其他设置
+#     module.frameworks = 'UIKit', 'Foundation'
+#     module.weak_frameworks = 'SomeFramework'
+#     module.pod_target_xcconfig = { 'OTHER_SWIFT_FLAGS' => '-D MODULE_NAME_ENABLED' }
+  end
    
    
    s.dependency 'FMDB'

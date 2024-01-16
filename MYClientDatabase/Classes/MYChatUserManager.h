@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameter userId: userId
 - (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId;
 
-/// 获取指定用户正在聊天的信息
+/// 获取指定用户正在聊天的用户列表
 /// - Parameter userId: userId
 - (NSArray<MYDBUser *> *)getChatPersonWithUserId:(long long)userId;
 

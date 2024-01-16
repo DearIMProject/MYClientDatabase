@@ -65,9 +65,13 @@ NS_ASSUME_NONNULL_BEGIN
         withMessageId:(long long)messageId
        belongToUserId:(long long)owneruserId;
 
-
 /// 获取最新的时间戳
 - (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId;
+
+/// 获取当前用户消息的最新消息内容
+- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId;
+
+- (void)messageSendFailureInMessage:(MYDataMessage *)message;
 
 @end
 

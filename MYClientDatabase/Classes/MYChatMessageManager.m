@@ -74,13 +74,14 @@ NSString *kReadList = @"readList";
     NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@,%@,%@,%@,%@,%@"
                      " from %@"
                      " where %@ = ? and"
-                     "( %@=? and %@ = ? or %@ = ? and %@ = ? ) ",
+                     "(( %@=? and %@ = ?) or( %@ = ? and %@ = ? ));",
                      kMessageId,kFromEntity,kFromId,kToId,kToEntity,kMessageType,kContent,kSendStatus,kTimestamp,
                      kMessageTable,
                      kAffMessageUserId,
                      kFromId,kToId,kFromId,kToId];
     [MYLog debug:@"📚sql = %@",sql];
-    FMResultSet *resultSet = [self.database executeQuery:sql, @(ownerUserId),@(userId),@(ownerUserId),@(ownerUserId),@(userId)];
+    FMResultSet *resultSet = [self.database executeQuery:sql, @(ownerUserId),
+                              @(userId),@(ownerUserId),@(ownerUserId),@(userId)];
     while (resultSet.next) {
         MYDataMessage *message = [[MYDataMessage alloc] init];
         message.msgId = [resultSet longLongIntForColumn:kMessageId];
@@ -95,10 +96,10 @@ NSString *kReadList = @"readList";
     }
     return chatMessages;
 }
-
+// userId 是fromId
 - (BOOL)addMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId{
     NSMutableArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:ownerUserId];
-    //TODO: wmy 对于自己发给自己的消息，需要做一个去重
+    // 对于自己发给自己的消息，需要做一个去重
     if (userId == ownerUserId) {
         NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
         MYDataMessage *findMessage;
@@ -117,8 +118,6 @@ NSString *kReadList = @"readList";
 }
 
 - (BOOL)_addDataMessage:(MYDataMessage *)message belongToUserId:(long long)ownerUserId{
-    
-    
     [self.database beginTransaction];
     BOOL success = false;
     @try {
@@ -204,6 +203,9 @@ NSString *kReadList = @"readList";
     NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
     MYDataMessage *message;
     while (message = [reverseEnumerator nextObject]) {
+        if (message.fromId == owneruserId) {
+            continue;
+        }
         if (!message.readList.length ||
             [message.readList containsString:[NSString stringWithFormat:@"%lld",userId]]) {
             notReadList ++;
@@ -213,7 +215,11 @@ NSString *kReadList = @"readList";
 }
 
 - (int)getNotReadNumberBelongToUserId:(long long)owneruserId {
-    
+    int count = 0;
+    for (NSNumber *uidNumber in self.userMsgsMap) {
+        count += [self getNotReadNumberWithUserId:uidNumber.longLongValue belongToUserId:owneruserId];
+    }
+    return count;
 }
 
 - (BOOL)addReadUserId:(long long)userId withMessageId:(long long)messageId belongToUserId:(long long)owneruserId {
@@ -234,20 +240,21 @@ NSString *kReadList = @"readList";
 }
 
 - (BOOL)_addReadUserId:(long long)userId withMessage:(MYDataMessage *)message readList:(NSString *)readList {
-    //TODO: wmy
     [self.database beginTransaction];
     BOOL success = false;
     @try {
         NSString *sql = [NSString stringWithFormat:@"update %@ set "
+                         "%@ = ? ,"
                          "%@ = ? "
                          "where %@ = ?"
                          ,
                          kMessageTable,
                          kSendStatus,
+                         kReadList,
                          kMessageId
         ];
         [MYLog debug:@"📚sql = %@",sql];
-        success = [self.database executeUpdate:sql,@(message.sendStatus),@(message.msgId)];
+        success = [self.database executeUpdate:sql,@(message.sendStatus),message.readList?:@"",@(message.msgId)];
         [MYLog debug:@"📚更新数据消息成功标识,%d",success];
     } @catch (NSException *exception) {
         [self.database rollback];
@@ -272,10 +279,28 @@ NSString *kReadList = @"readList";
     [MYLog debug:@"📚sql = %@",sql];
     FMResultSet *resultSet = [self.database executeQuery:sql,@(owneruserId)];
     if (resultSet.next) {
-        NSTimeInterval timestamp = [resultSet longLongIntForColumn:kTimestamp];
+        NSTimeInterval timestamp = [resultSet longLongIntForColumn:[NSString stringWithFormat:@"max(%@)",kTimestamp]];
         return timestamp;
     }
     return 0;
+}
+
+- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId {
+    NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
+    return messages.lastObject.content;
+}
+
+- (void)messageSendFailureInMessage:(MYDataMessage *)message {
+    NSArray<MYDataMessage *> *messages = self.userMsgsMap[@(message.toId)];
+    NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
+    MYDataMessage *aMessage;
+    while (aMessage = [reverseEnumerator nextObject]) {
+        if (message.timestamp == aMessage.timestamp) {
+            aMessage.sendStatus = MYDataMessageStatus_Failure;
+            [self _addReadUserId:message.toId withMessage:message readList:nil];
+            break;
+        }
+    }
 }
 
 @end

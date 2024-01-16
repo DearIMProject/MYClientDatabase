@@ -12,6 +12,8 @@
 
 NSString *kDatabaseName = @"database.sqlite";
 
+NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
+
 @interface MYClientDatabase ()
 
 @property(nonatomic, assign) BOOL openSuccess;
@@ -34,7 +36,7 @@ NSString *kDatabaseName = @"database.sqlite";
     self = [super init];
     if (self) {
 //        TODO: wmy 测试，每次启动都删除原始文件
-        [self removeDatabaseFile];
+//        [self removeDatabaseFile];
         [self copyDatabaseToHomeDirectory];
         [self openSqlDataBase];
     }
@@ -64,7 +66,12 @@ NSString *kDatabaseName = @"database.sqlite";
 #pragma mark - message
 
 - (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId{
-    return [theChatMessageManager addMessage:message withUserId:userId belongToUserId:ownerUserId];
+    [theChatUserManager updateUser:[theChatUserManager chatPersonWithUserId:userId] inChat:YES belongUserId:ownerUserId];
+    BOOL success = [theChatMessageManager addMessage:message withUserId:userId belongToUserId:ownerUserId];
+    if (success) {
+        [NSNotificationCenter.defaultCenter postNotificationName:MESSAGE_SEND_SUCCESS_NOTIFICATION object:nil userInfo:@{@"message":message}];
+    }
+    return success;
 }
 
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId {
@@ -86,6 +93,15 @@ NSString *kDatabaseName = @"database.sqlite";
 - (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId {
     return [theChatMessageManager getLastestTimestampBelongToUserId:owneruserId];
 }
+
+- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId {
+    return [theChatMessageManager lastestContentWithUserId:userId belongToUserId:owneruserId];
+}
+
+- (void)messageSendFailureInMessage:(MYDataMessage *)message {
+    [theChatMessageManager messageSendFailureInMessage:message];
+}
+
 #pragma mark - file
 
 - (void)removeDatabaseFile {

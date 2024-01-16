@@ -10,7 +10,7 @@
 #import "MYDataMessage.h"
 #import "MYChatUserManager.h"
 
-
+FOUNDATION_EXPORT NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION;
 #define theDatabase MYClientDatabase.database
 
 NS_ASSUME_NONNULL_BEGIN
@@ -19,13 +19,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)database;
 
-
-
 @end
 
 @interface MYClientDatabase (MYDBMessage)
 
 - (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId;
+
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId;
 
 - (BOOL)sendSuccessWithTimer:(NSTimeInterval)timer messageId:(long long)messageId withUserId:(long long)fromId belongToUserId:(long long)owneruserId;
@@ -43,6 +42,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 - (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId;
+
+/// 获取当前userId聊天下的最新消息
+/// - Parameters:
+///   - userId: 聊天的用户Id
+///   - owneruserId: 归属userId
+- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId;
+
+- (void)messageSendFailureInMessage:(MYDataMessage *)message;
 
 @end
 
