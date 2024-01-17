@@ -71,11 +71,11 @@ NSString *kReadList = @"readList";
         return chatMessages;
     }
     [MYLog debug:@"📚查询当前%lld 和 %lld 的消息列表",userId,ownerUserId];
-    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@,%@,%@,%@,%@,%@"
+    NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@,%@,%@,%@,%@,%@,%@"
                      " from %@"
                      " where %@ = ? and"
                      "(( %@=? and %@ = ?) or( %@ = ? and %@ = ? ));",
-                     kMessageId,kFromEntity,kFromId,kToId,kToEntity,kMessageType,kContent,kSendStatus,kTimestamp,
+                     kMessageId,kFromEntity,kFromId,kToId,kToEntity,kMessageType,kContent,kSendStatus,kTimestamp,kReadList,
                      kMessageTable,
                      kAffMessageUserId,
                      kFromId,kToId,kFromId,kToId];
@@ -92,6 +92,8 @@ NSString *kReadList = @"readList";
         message.messageType = [resultSet intForColumn:kMessageType];
         message.content = [resultSet stringForColumn:kContent];
         message.sendStatus = [resultSet intForColumn:kSendStatus];
+        message.timestamp = [resultSet doubleForColumn:kTimestamp];
+        message.readList = [resultSet stringForColumn:kReadList];
         [chatMessages addObject:message];
     }
     return chatMessages;
@@ -216,7 +218,7 @@ NSString *kReadList = @"readList";
 
 - (int)getNotReadNumberBelongToUserId:(long long)owneruserId {
     int count = 0;
-    for (NSNumber *uidNumber in self.userMsgsMap) {
+    for (NSNumber *uidNumber in self.userMsgsMap.allKeys) {
         count += [self getNotReadNumberWithUserId:uidNumber.longLongValue belongToUserId:owneruserId];
     }
     return count;
@@ -297,7 +299,21 @@ NSString *kReadList = @"readList";
     while (aMessage = [reverseEnumerator nextObject]) {
         if (message.timestamp == aMessage.timestamp) {
             aMessage.sendStatus = MYDataMessageStatus_Failure;
-            [self _addReadUserId:message.toId withMessage:message readList:nil];
+            [self _addReadUserId:aMessage.toId withMessage:aMessage readList:nil];
+            break;
+        }
+    }
+}
+
+- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId {
+    NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
+    NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
+    MYDataMessage *aMessage;
+    while (aMessage = [reverseEnumerator nextObject]) {
+        if (message.content.doubleValue == aMessage.timestamp) {
+            aMessage.readList = [NSString stringWithFormat:@"%lld",userId];
+            [self _addReadUserId:aMessage.toId withMessage:aMessage readList:aMessage.readList];
+            [self _addDataMessage:message belongToUserId:owneruserId];
             break;
         }
     }

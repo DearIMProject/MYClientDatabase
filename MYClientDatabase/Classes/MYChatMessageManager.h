@@ -73,6 +73,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)messageSendFailureInMessage:(MYDataMessage *)message;
 
+/// 标记消息为已读
+/// - Parameters:
+///   - timestamp: 已读消息体
+///   - userId: 用户id
+///   - owneruserId: 归属用户
+- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId;
+
 @end
 
 NS_ASSUME_NONNULL_END

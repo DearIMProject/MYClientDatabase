@@ -102,6 +102,10 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
     [theChatMessageManager messageSendFailureInMessage:message];
 }
 
+- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId {
+    [theChatMessageManager setReadedMessageWithMessage:message withUserId:userId belongToUserId:owneruserId];
+}
+
 #pragma mark - file
 
 - (void)removeDatabaseFile {
