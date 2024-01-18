@@ -53,7 +53,10 @@ NSString *kReadList = @"readList";
     }
     return self;
 }
-
+/// 获取当前用户userId与用户personUserId的对话
+/// - Parameters:
+///   - personuserId: 对话的用户
+///   - userId: 当前用户
 - (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId {
     NSMutableArray<MYDataMessage *> *messages = self.userMsgsMap[@(userId)];
     if (!messages.count) {
@@ -73,14 +76,17 @@ NSString *kReadList = @"readList";
     [MYLog debug:@"📚查询当前%lld 和 %lld 的消息列表",userId,ownerUserId];
     NSString *sql = [NSString stringWithFormat:@"select %@,%@,%@,%@,%@,%@,%@,%@,%@,%@"
                      " from %@"
-                     " where %@ = ? and"
+                     " where %@ = ? and "
+                     "%@ <> ? and "
                      "(( %@=? and %@ = ?) or( %@ = ? and %@ = ? ));",
                      kMessageId,kFromEntity,kFromId,kToId,kToEntity,kMessageType,kContent,kSendStatus,kTimestamp,kReadList,
                      kMessageTable,
                      kAffMessageUserId,
+                     kMessageType,
                      kFromId,kToId,kFromId,kToId];
     [MYLog debug:@"📚sql = %@",sql];
     FMResultSet *resultSet = [self.database executeQuery:sql, @(ownerUserId),
+                              @(8),
                               @(userId),@(ownerUserId),@(ownerUserId),@(userId)];
     while (resultSet.next) {
         MYDataMessage *message = [[MYDataMessage alloc] init];
@@ -151,12 +157,15 @@ NSString *kReadList = @"readList";
     }
 }
 
-- (BOOL)updateMessageWithSendSuccess:(NSTimeInterval)timestamp
-                           messageId:(long long)messageId
-                          withUserId:(long long)userId
-                      belongToUserId:(long long)owneruserId {
+/// 发送的消息成功送达
+/// - Parameters:
+///   - messageId: 消息Id
+///   - timestamp: 消息时间戳
+///   - personUserId: 对话的用户
+///   - userId: 当前用户
+- (BOOL)sendSuccessWithTimer:(NSTimeInterval)timestamp messageId:(long long)messageId withUserId:(long long)fromId belongToUserId:(long long)owneruserId {
     [MYLog debug:@"📚更新消息成功标识"];
-    NSMutableArray<MYDataMessage *> *messages =  [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
+    NSMutableArray<MYDataMessage *> *messages =  [self getChatMessageWithPerson:fromId belongToUserId:owneruserId];
     NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
     MYDataMessage *message;
     while (message = [reverseEnumerator nextObject]) {
@@ -197,7 +206,10 @@ NSString *kReadList = @"readList";
         return success;
     }
 }
-
+/// 获取当前聊天下未读消息
+/// - Parameters:
+///   - userId: 当前聊天的用户
+///   - owneruserId: 当前用户
 - (int)getNotReadNumberWithUserId:(long long)userId
                    belongToUserId:(long long)owneruserId {
     int notReadList = 0;
@@ -269,7 +281,7 @@ NSString *kReadList = @"readList";
     }
     return NO;
 }
-
+/// 获取最新的时间戳
 - (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId {
     NSString *sql = [NSString stringWithFormat:@"select MAX(%@) from %@ "
                      "where %@ = ?"
@@ -286,7 +298,7 @@ NSString *kReadList = @"readList";
     }
     return 0;
 }
-
+/// 获取当前用户消息的最新消息内容
 - (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId {
     NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
     return messages.lastObject.content;
@@ -304,7 +316,11 @@ NSString *kReadList = @"readList";
         }
     }
 }
-
+/// 标记消息为已读
+/// - Parameters:
+///   - timestamp: 已读消息体
+///   - userId: 用户id
+///   - owneruserId: 归属用户
 - (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId {
     NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
     NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
@@ -319,5 +335,16 @@ NSString *kReadList = @"readList";
     }
 }
 
+- (MYDataMessage *)messageWithTimestamp:(NSTimeInterval)timestamp userId:(long long)userId belongToUserId:(long long)owneruserId {
+    NSArray<MYDataMessage *> *messages = [self getChatMessageWithPerson:userId belongToUserId:owneruserId];
+    NSEnumerator *reverseEnumerator = messages.reverseObjectEnumerator;
+    MYDataMessage *aMessage;
+    while (aMessage = [reverseEnumerator nextObject]) {
+        if (timestamp == aMessage.timestamp) {
+            return aMessage;
+        }
+    }
+    return nil;
+}
 @end
  

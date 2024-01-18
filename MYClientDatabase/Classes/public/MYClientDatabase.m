@@ -43,17 +43,9 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
     return self;
 }
 
-#pragma mark - ChatPerson
-- (void)updateAllUser:(NSArray<MYDBUser *> *)users fromUid:(long long)userId {
-    [theChatUserManager updateChatPersons:users fromUserId:userId];
-}
-- (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId {
-    return [theChatUserManager getAllChatPersonWithUserId:userId];
-}
 
-- (NSArray<MYDBUser *> *)getChatListWithUserId:(long long)userId {
-    return [theChatUserManager getChatPersonWithUserId:userId];
-}
+
+#pragma mark - ChatPerson
 
 - (MYDBUser *)getChatPersonWithUserId:(long long)userId {
     return [theChatUserManager chatPersonWithUserId:userId];
@@ -74,37 +66,23 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
     return success;
 }
 
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId {
-    return [theChatMessageManager getChatMessageWithPerson:userId belongToUserId:owneruserId];
+#pragma mark - Forward
+- (id)forwardingTargetForSelector:(SEL)aSelector {
+    if ([theChatUserManager respondsToSelector:aSelector]) {
+        return theChatUserManager;
+    }
+    if ([theChatMessageManager respondsToSelector:aSelector]) {
+        return theChatMessageManager;
+    }
+    return nil;
 }
 
-- (BOOL)sendSuccessWithTimer:(NSTimeInterval)timer messageId:(long long)messageId withUserId:(long long)fromId belongToUserId:(long long)owneruserId {
-    return [theChatMessageManager updateMessageWithSendSuccess:timer messageId:messageId withUserId:fromId belongToUserId:owneruserId];
-}
-- (int)getNotReadNumberWithUserId:(long long)userId
-                   belongToUserId:(long long)owneruserId {
-    return [theChatMessageManager getNotReadNumberWithUserId:userId belongToUserId:owneruserId];
+- (BOOL)respondsToSelector:(SEL)aSelector {
+    return [theChatUserManager respondsToSelector:aSelector] ||
+    [theChatMessageManager respondsToSelector:aSelector] ||
+    [super respondsToSelector:aSelector];
 }
 
-- (int)getNotReadNumberBelongToUserId:(long long)ownerUserId {
-    return [theChatMessageManager getNotReadNumberBelongToUserId:ownerUserId];
-}
-
-- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId {
-    return [theChatMessageManager getLastestTimestampBelongToUserId:owneruserId];
-}
-
-- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId {
-    return [theChatMessageManager lastestContentWithUserId:userId belongToUserId:owneruserId];
-}
-
-- (void)messageSendFailureInMessage:(MYDataMessage *)message {
-    [theChatMessageManager messageSendFailureInMessage:message];
-}
-
-- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId {
-    [theChatMessageManager setReadedMessageWithMessage:message withUserId:userId belongToUserId:owneruserId];
-}
 
 #pragma mark - file
 

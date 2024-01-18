@@ -22,12 +22,6 @@ NS_ASSUME_NONNULL_BEGIN
 // ownerUserId 该对话的拥有者
 
 
-/// 获取当前用户userId与用户personUserId的对话
-/// - Parameters:
-///   - personuserId: 对话的用户
-///   - userId: 当前用户
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)personUserId belongToUserId:(long long)userId;
-
 /// 当前用户userId向用户personUserId添加一条消息
 /// - Parameters:
 ///   - message: 消息体
@@ -35,26 +29,11 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - userId: 当前用户
 - (BOOL)addMessage:(MYDataMessage *)message withUserId:(long long)personUserId belongToUserId:(long long)userId;
 
-/// 发送的消息成功送达
-/// - Parameters:
-///   - messageId: 消息Id
-///   - timestamp: 消息时间戳
-///   - personUserId: 对话的用户
-///   - userId: 当前用户
-- (BOOL)updateMessageWithSendSuccess:(NSTimeInterval)timestamp
-                           messageId:(long long)messageId
-                          withUserId:(long long)userId
-                      belongToUserId:(long long)owneruserId;
 
 
-/// 获取当前聊天下未读消息
-/// - Parameters:
-///   - userId: 当前聊天的用户
-///   - owneruserId: 当前用户
 - (int)getNotReadNumberWithUserId:(long long)userId
                    belongToUserId:(long long)owneruserId;
 
-- (int)getNotReadNumberBelongToUserId:(long long)owneruserId;
 
 /// 添加一个已读用户到信息中
 /// - Parameters:
@@ -65,20 +44,7 @@ NS_ASSUME_NONNULL_BEGIN
         withMessageId:(long long)messageId
        belongToUserId:(long long)owneruserId;
 
-/// 获取最新的时间戳
-- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId;
 
-/// 获取当前用户消息的最新消息内容
-- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId;
-
-- (void)messageSendFailureInMessage:(MYDataMessage *)message;
-
-/// 标记消息为已读
-/// - Parameters:
-///   - timestamp: 已读消息体
-///   - userId: 用户id
-///   - owneruserId: 归属用户
-- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId;
 
 @end
 

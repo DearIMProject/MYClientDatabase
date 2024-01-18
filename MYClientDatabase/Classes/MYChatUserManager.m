@@ -43,8 +43,9 @@ NSString *kIsInChat = @"isInChat";
     }
     return self;
 }
-
-- (NSArray<MYDBUser *> *)getChatPersonWithUserId:(long long)userId {
+/// 获取指定用户正在聊天的用户列表
+/// - Parameter userId: userId
+- (NSArray<MYDBUser *> *)getChatListWithUserId:(long long)userId {
     NSPredicate *chatPredicate = [NSPredicate predicateWithBlock:^BOOL(MYDBUser *user, NSDictionary* bindings) {
         if (user.isInChat) {
             [self.cacheChatUids addObject:@(user.userId)];
@@ -84,7 +85,8 @@ NSString *kIsInChat = @"isInChat";
     [theChatUserManager resetChatPersons:chatPersons];
     return chatPersons;
 }
-
+/// 获取指定用户所有通讯录中用户的信息
+/// - Parameter userId: userId
 - (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId {
     if (self.cacheAddressPersons.count) {
         return self.cacheAddressPersons;
@@ -117,7 +119,7 @@ NSString *kIsInChat = @"isInChat";
     return chatPersons;
 }
 
-- (BOOL)updateChatPersons:(NSArray<MYDBUser *> *)persons fromUserId:(long long)userId {
+- (BOOL)updateAllUser:(NSArray<MYDBUser *> *)persons fromUid:(long long)userId {
     [self.database beginTransaction];
     BOOL isSuccess = NO;
     

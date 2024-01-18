@@ -58,6 +58,12 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - owneruserId: 归属userId
 - (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId;
 
+/// 获取消息
+/// - Parameters:
+///   - userId: 用户id
+///   - owneruserId: userId
+- (MYDataMessage *)messageWithTimestamp:(NSTimeInterval)timestamp userId:(long long)userId belongToUserId:(long long)owneruserId;
+
 @end
 
 @interface MYClientDatabase (MYDBUser)

@@ -27,15 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)updateUser:(MYDBUser *)user inChat:(BOOL)inchat belongUserId:(long long)ownerUserId;
 
-/// 获取指定用户所有通讯录中用户的信息
-/// - Parameter userId: userId
-- (NSArray<MYDBUser *> *)getAllChatPersonWithUserId:(long long)userId;
 
-/// 获取指定用户正在聊天的用户列表
-/// - Parameter userId: userId
-- (NSArray<MYDBUser *> *)getChatPersonWithUserId:(long long)userId;
-
-- (BOOL)updateChatPersons:(NSArray<MYDBUser *> *)persons fromUserId:(long long)userId;
 
 - (MYDBUser *)chatPersonWithUserId:(long long)userId;
 
