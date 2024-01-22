@@ -11,6 +11,7 @@
 #import "MYChatMessageManager.h"
 
 NSString *kDatabaseName = @"database.sqlite";
+NSString *kDataBaseUserName = @"user-%d.sqlite";
 
 NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
 
@@ -37,13 +38,20 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
     if (self) {
 //        TODO: wmy 测试，每次启动都删除原始文件
 //        [self removeDatabaseFile];
-        [self copyDatabaseToHomeDirectory];
-        [self openSqlDataBase];
     }
     return self;
 }
 
+- (void)resetCaches {
+    [theChatUserManager resetCaches];
+    [theChatMessageManager resetCaches];
+}
 
+
+- (void)setupWithUid:(long long)uid {
+    [self copyDatabaseToHomeDirectoryById:uid];
+    [self openSqlDataBaseById:uid];
+}
 
 #pragma mark - ChatPerson
 
@@ -51,15 +59,15 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
     return [theChatUserManager chatPersonWithUserId:userId];
 }
 
-- (void)setUserInChat:(MYDBUser *)user withOwnerUserId:(long long)userId {
-    [theChatUserManager updateUser:user inChat:YES belongUserId:userId];
+- (void)setUserInChat:(MYDBUser *)user  {
+    [theChatUserManager updateUser:user inChat:YES];
 }
 
 #pragma mark - message
 
-- (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId{
-    [theChatUserManager updateUser:[theChatUserManager chatPersonWithUserId:userId] inChat:YES belongUserId:ownerUserId];
-    BOOL success = [theChatMessageManager addMessage:message withUserId:userId belongToUserId:ownerUserId];
+- (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId {
+    [theChatUserManager updateUser:[theChatUserManager chatPersonWithUserId:userId] inChat:YES ];
+    BOOL success = [theChatMessageManager addMessage:message withUserId:userId ];
     if (success) {
         [NSNotificationCenter.defaultCenter postNotificationName:MESSAGE_SEND_SUCCESS_NOTIFICATION object:nil userInfo:@{@"message":message}];
     }
@@ -86,8 +94,8 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
 
 #pragma mark - file
 
-- (void)removeDatabaseFile {
-    NSString *dstPath = [self docDBFilePath];
+- (void)removeDatabaseFileById:(long long)uid {
+    NSString *dstPath = [self docDBFilePathById:uid];
     BOOL isFileExist = [[NSFileManager defaultManager] fileExistsAtPath:dstPath];
     if (isFileExist) {
         NSError *error;
@@ -95,17 +103,17 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
         NSLog(@"error = %@", error);
     }
 }
-- (NSString *)docDBFilePath {
+- (NSString *)docDBFilePathById:(long long)uid {
     NSArray *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *docDirectory = [path objectAtIndex:0];
-    NSString *dstPath = [docDirectory stringByAppendingPathComponent:kDatabaseName];
+    NSString *dstPath = [docDirectory stringByAppendingPathComponent:[NSString stringWithFormat:kDataBaseUserName,uid]];
     return dstPath;
 }
 
-- (void)copyDatabaseToHomeDirectory {
+- (void)copyDatabaseToHomeDirectoryById:(long long)uid {
     //TODO: wmy 将sqlite放到home目录下
     NSString *filePath = [[NSBundle bundleForClass:self.class] pathForResource:[NSString stringWithFormat:@"MYClientDatabase.bundle/%@", kDatabaseName] ofType:nil];
-    NSString *dstPath = [self docDBFilePath];
+    NSString *dstPath = [self docDBFilePathById:uid];
     BOOL isFileExist = [[NSFileManager defaultManager] fileExistsAtPath:dstPath];
     if (!isFileExist) {
         NSLog(@"dstPath = %@", dstPath);
@@ -117,11 +125,11 @@ NSString * const MESSAGE_SEND_SUCCESS_NOTIFICATION = @"kMessageSendSuccess";
 }
 
 // 打开数据库
-- (void)openSqlDataBase {
+- (void)openSqlDataBaseById:(long long)uid {
     // _db是数据库的句柄,即数据库的象征,如果对数据库进行增删改查,就得操作这个示例
 
     // 获取数据库文件的路径
-    NSString *docPath = [self docDBFilePath];
+    NSString *docPath = [self docDBFilePathById:uid];
     self.database = [FMDatabase databaseWithPath:docPath];
     theChatMessageManager.database = self.database;
     theChatUserManager.database = self.database;

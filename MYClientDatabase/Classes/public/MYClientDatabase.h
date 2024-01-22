@@ -19,35 +19,39 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)database;
 
+/// 登录后创建和重置数据库
+- (void)setupWithUid:(long long)uid;
+
+- (void)resetCaches;
+
 @end
 
 @interface MYClientDatabase (MYDBMessage)
 
-- (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)ownerUserId;
+- (BOOL)addChatMessage:(MYDataMessage *)message withUserId:(long long)userId;
 
-- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId belongToUserId:(long long)owneruserId;
+- (NSArray<MYDataMessage *> *)getChatMessageWithPerson:(long long)userId;
 
-- (BOOL)sendSuccessWithTimer:(NSTimeInterval)timer messageId:(long long)messageId withUserId:(long long)fromId belongToUserId:(long long)owneruserId;
+- (BOOL)sendSuccessWithTimer:(NSTimeInterval)timer messageId:(long long)messageId withUserId:(long long)fromId;
 
 /// 获取针对userId聊天的消息未读数量
 /// - Parameters:
 ///   - userId: 聊天用户
 ///   - owneruserId: userId
-- (int)getNotReadNumberWithUserId:(long long)userId
-                   belongToUserId:(long long)owneruserId;
+- (int)getNotReadNumberWithUserId:(long long)userId;
 
 /// 当前用户所有的聊天未读数量
 /// - Parameter ownerUserId: userId
-- (int)getNotReadNumberBelongToUserId:(long long)ownerUserId;
+- (int)getNotReadNumbers;
 
 
-- (NSTimeInterval)getLastestTimestampBelongToUserId:(long long)owneruserId;
+- (NSTimeInterval)getLastestTimestamp;
 
 /// 获取当前userId聊天下的最新消息
 /// - Parameters:
 ///   - userId: 聊天的用户Id
 ///   - owneruserId: 归属userId
-- (NSString *)lastestContentWithUserId:(long long)userId belongToUserId:(long long)owneruserId;
+- (NSString *)lastestContentWithUserId:(long long)userId;
 
 - (void)messageSendFailureInMessage:(MYDataMessage *)message;
 
@@ -56,13 +60,14 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - message: 已读消息体
 ///   - userId: 用户id
 ///   - owneruserId: 归属userId
-- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId belongToUserId:(long long)owneruserId;
+- (void)setReadedMessageWithMessage:(MYDataMessage *)message withUserId:(long long)userId;
 
+- (BOOL)setReadedWithTimestamp:(NSTimeInterval)timestamp userId:(long long)userId;
 /// 获取消息
 /// - Parameters:
 ///   - userId: 用户id
 ///   - owneruserId: userId
-- (MYDataMessage *)messageWithTimestamp:(NSTimeInterval)timestamp userId:(long long)userId belongToUserId:(long long)owneruserId;
+- (MYDataMessage *)messageWithTimestamp:(NSTimeInterval)timestamp userId:(long long)userId;
 
 @end
 
@@ -83,7 +88,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// - Parameter userId: userId
 - (MYDBUser *)getChatPersonWithUserId:(long long)userId;
 
-- (void)setUserInChat:(MYDBUser *)user withOwnerUserId:(long long)userId;
+- (void)setUserInChat:(MYDBUser *)user;
 
 @end
 

@@ -9,6 +9,8 @@
 #import <FMDB/FMDB.h>
 #import "MYDBUser.h"
 
+//FOUNDATION_EXPORT NSString * const CHAT_PERSON_CHANGE;
+
 NS_ASSUME_NONNULL_BEGIN
 
 #define theChatUserManager MYChatUserManager.shared
@@ -19,13 +21,15 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (instancetype)shared;
 
+- (void)resetCaches;
+
 - (void)resetAddressPersons:(NSArray<MYDBUser *> *)chatpersons;
 
 - (void)updateChatPerson:(MYDBUser *)chatPerson;
 
 - (void)removeChatPerson:(MYDBUser *)chatPerson;
 
-- (BOOL)updateUser:(MYDBUser *)user inChat:(BOOL)inchat belongUserId:(long long)ownerUserId;
+- (BOOL)updateUser:(MYDBUser *)user inChat:(BOOL)inchat;
 
 
 

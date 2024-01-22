@@ -14,7 +14,7 @@
 
 @interface MYClientDatabase (MYDelete)
 
-- (void)removeDatabaseFile;
+- (void)removeDatabaseFileById:(long long)uid;
 
 @end
 
@@ -26,11 +26,10 @@
         [self deleteTables];
     }],
     ]];
-    
 }
 
 + (void)deleteTables {
-    [theDatabase removeDatabaseFile];
+    [theDatabase removeDatabaseFileById:TheUserManager.uid];
 }
 
 @end

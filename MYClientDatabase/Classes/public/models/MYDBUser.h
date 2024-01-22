@@ -15,7 +15,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) NSString *name;/**<  名称 */
 @property (nonatomic, strong) NSString *email;/**<  邮箱 */
 @property (nonatomic, strong) NSString *iconURL;/**<  头像 */
-@property (nonatomic, assign) long long affUserId;/**<  属于哪个user */
 @property (nonatomic, assign) int status;/**<  状态 */
 @property (nonatomic, assign) BOOL isInChat;/**< 是否在聊天窗口  */
 

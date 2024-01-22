@@ -18,8 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) FMDatabase *database;/**< 数据库  */
 
 + (instancetype)shared;
-// userId 对话的人
-// ownerUserId 该对话的拥有者
+- (void)resetCaches;
 
 
 /// 当前用户userId向用户personUserId添加一条消息
@@ -27,22 +26,20 @@ NS_ASSUME_NONNULL_BEGIN
 ///   - message: 消息体
 ///   - personUserId: 当前聊天的人
 ///   - userId: 当前用户
-- (BOOL)addMessage:(MYDataMessage *)message withUserId:(long long)personUserId belongToUserId:(long long)userId;
+- (BOOL)addMessage:(MYDataMessage *)message withUserId:(long long)personUserId ;
 
 
 
-- (int)getNotReadNumberWithUserId:(long long)userId
-                   belongToUserId:(long long)owneruserId;
+- (int)getNotReadNumberWithUserId:(long long)userId;
+                   
 
 
 /// 添加一个已读用户到信息中
 /// - Parameters:
 ///   - userId: 已读用户id
 ///   - messageId: 信息id
-///   - owneruserId: 当前用户
 - (BOOL)addReadUserId:(long long)userId
-        withMessageId:(long long)messageId
-       belongToUserId:(long long)owneruserId;
+        withMessageId:(long long)messageId;
 
 
 

@@ -23,7 +23,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) int toEntity;
 @property (nonatomic, strong) NSString *content;/**<  内容 */
 @property (nonatomic, assign) int messageType;/**<  messageType */
-@property (nonatomic, assign) long timestamp;
+@property (nonatomic, assign) long long timestamp;
 @property (nonatomic, assign) MYDataMessageStatus sendStatus;/**<  是否发送成功 */
 @property (nonatomic, strong) NSString *readList;/**<  已读信息 */
 
